@@ -95,16 +95,25 @@
 
                 {{-- Add to Cart Form --}}
                 @if(!$product->is_sold)
-                    <form method="POST" action="{{ route('cart.add') }}">
-                        @csrf
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <input type="hidden" name="quantity" value="1">
-                        <input type="hidden" name="size" value="{{ $product->size_text ?? 'Standard' }}">
+                    @auth
+                        <form method="POST" action="{{ route('cart.add') }}">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="size" value="{{ $product->size_text ?? 'Standard' }}">
 
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 700; letter-spacing: 1px;">
-                            ADD TO CART &bull; {{ $product->formatted_price }}
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 700; letter-spacing: 1px;">
+                                ADD TO CART &bull; {{ $product->formatted_price }}
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-primary" style="display: block; text-align: center; width: 100%; padding: 16px; font-size: 14px; font-weight: 700; text-decoration: none; letter-spacing: 0.5px;">
+                            LOGIN WITH GMAIL TO ADD TO CART &bull; {{ $product->formatted_price }}
+                        </a>
+                        <small style="color: #64748b; display: block; text-align: center; margin-top: 8px;">
+                            Log in with your Gmail / Account first to secure this unique ukay item.
+                        </small>
+                    @endauth
                 @else
                     <button type="button" class="btn" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 700; background: #cbd5e1; color: #64748b; cursor: not-allowed;" disabled>
                         ITEM IS SOLD OUT
