@@ -64,10 +64,6 @@
             </div>
         </div>
 
-        <div class="form-group mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="4">{{ old('description', $product->description) }}</textarea>
-        </div>
 
         <div class="form-group mb-3">
             <label class="form-label">Available Sizes</label>

@@ -63,10 +63,6 @@
             </div>
         </div>
 
-        <div class="form-group mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="4" placeholder="Detailed product specifications, fit guide, and details...">{{ old('description') }}</textarea>
-        </div>
 
         <div class="form-group mb-3">
             <label class="form-label">Available Sizes</label>
