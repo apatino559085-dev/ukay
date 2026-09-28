@@ -1,0 +1,151 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Size;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+class ProductController extends Controller
+{
+    /**
+     * Display all products.
+     */
+    public function index()
+    {
+        $products = Product::with('category')->latest()->paginate(15);
+        return view('admin.products.index', compact('products'));
+    }
+
+    /**
+     * Show the form to create a new product.
+     */
+    public function create()
+    {
+        $categories = Category::all();
+        $sizes = Size::all();
+        return view('admin.products.create', compact('categories', 'sizes'));
+    }
+
+    /**
+     * Store a new product.
+     */
+    public function store(Request $request)
+    {
+        // Validate product fields
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'material'    => 'nullable|string|max:255',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured'    => 'nullable|boolean',
+            'sizes'       => 'nullable|array',
+            'sizes.*'     => 'exists:sizes,id',
+        ]);
+
+        $data = $request->only(['name', 'description', 'price', 'category_id', 'material', 'stock']);
+        $data['featured'] = $request->has('featured');
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $request->file('image')->move(public_path('images/products'), $imageName);
+            $data['image'] = 'images/products/' . $imageName;
+        }
+
+        $product = Product::create($data);
+
+        // Attach sizes
+        if ($request->has('sizes')) {
+            foreach ($request->sizes as $sizeId) {
+                $product->sizes()->attach($sizeId, ['stock' => $request->stock]);
+            }
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Product created successfully!');
+    }
+
+    /**
+     * Show the form to edit a product.
+     */
+    public function edit(Product $product)
+    {
+        $categories = Category::all();
+        $sizes = Size::all();
+        $product->load('sizes');
+        return view('admin.products.edit', compact('product', 'categories', 'sizes'));
+    }
+
+    /**
+     * Update a product.
+     */
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'material'    => 'nullable|string|max:255',
+            'stock'       => 'required|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'featured'    => 'nullable|boolean',
+            'sizes'       => 'nullable|array',
+            'sizes.*'     => 'exists:sizes,id',
+        ]);
+
+        $data = $request->only(['name', 'description', 'price', 'category_id', 'material', 'stock']);
+        $data['featured'] = $request->has('featured');
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image && file_exists(public_path($product->image))) {
+                unlink(public_path($product->image));
+            }
+
+            $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $request->file('image')->move(public_path('images/products'), $imageName);
+            $data['image'] = 'images/products/' . $imageName;
+        }
+
+        $product->update($data);
+
+        // Sync sizes
+        if ($request->has('sizes')) {
+            $syncData = [];
+            foreach ($request->sizes as $sizeId) {
+                $syncData[$sizeId] = ['stock' => $request->stock];
+            }
+            $product->sizes()->sync($syncData);
+        } else {
+            $product->sizes()->detach();
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Product updated successfully!');
+    }
+
+    /**
+     * Delete a product.
+     */
+    public function destroy(Product $product)
+    {
+        // Delete product image
+        if ($product->image && file_exists(public_path($product->image))) {
+            unlink(public_path($product->image));
+        }
+
+        $product->delete();
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Product deleted successfully!');
+    }
+}
