@@ -105,8 +105,15 @@ class CheckoutController extends Controller
         // Clear the cart
         $cart->items()->delete();
 
+        // Send order confirmation email
+        try {
+            \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\OrderPlacedMail($order));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order email error: ' . $e->getMessage());
+        }
+
         return redirect()->route('order.success', $order->id)
-            ->with('success', 'Order placed successfully! Your ukay item is reserved.');
+            ->with('success', 'Order placed successfully! A confirmation email has been sent.');
     }
 
     /**

@@ -30,9 +30,13 @@
                                    value="{{ old('email', $user->email) }}" required>
                         </div>
                         <div class="form-group">
-                            <label for="phone">Phone Number</label>
+                            <label for="phone">Active Mobile Phone Number *</label>
                             <input type="text" name="phone" id="phone" class="form-control"
+                                   placeholder="e.g. 09171234567"
                                    value="{{ old('phone', $user->phone) }}" required>
+                            <small style="color: #1e40af; background: #eff6ff; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: block; margin-top: 6px;">
+                                📞 <strong>Delivery Rider Protocol:</strong> Manawag ang delivery rider niining numeroha sa pag-abot sa imong address.
+                            </small>
                         </div>
                     </div>
 

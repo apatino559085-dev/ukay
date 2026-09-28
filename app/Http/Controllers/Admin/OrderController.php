@@ -37,6 +37,15 @@ class OrderController extends Controller
 
         $order->update(['status' => $request->status]);
 
-        return redirect()->back()->with('success', 'Order status updated successfully!');
+        // Send status update notification email to customer
+        try {
+            if ($order->email) {
+                \Illuminate\Support\Facades\Mail::to($order->email)->send(new \App\Mail\OrderStatusUpdatedMail($order));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Status email error: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Order status updated and notification email sent to customer!');
     }
 }
