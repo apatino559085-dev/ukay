@@ -23,7 +23,6 @@
                 <ul class="nav-menu">
                     <li><a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') ? 'active' : '' }}">Shop Ukay Finds</a></li>
                     <li><a href="{{ route('size-chart') }}" class="{{ request()->routeIs('size-chart') ? 'active' : '' }}">Size Guide</a></li>
-                    <li><a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">About Ukay Hub</a></li>
                 </ul>
             </nav>
 
