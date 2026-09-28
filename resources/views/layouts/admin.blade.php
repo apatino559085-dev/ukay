@@ -17,33 +17,33 @@
 
             <nav class="admin-nav">
                 <a href="{{ route('admin.dashboard') }}" class="admin-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    📊 Dashboard
+                    Dashboard
                 </a>
                 <a href="{{ route('admin.products.index') }}" class="admin-nav-item {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
-                    👕 Products
+                    Products
                 </a>
                 <a href="{{ route('admin.categories.index') }}" class="admin-nav-item {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                    📁 Categories
+                    Categories
                 </a>
                 <a href="{{ route('admin.orders.index') }}" class="admin-nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                    📦 Orders
+                    Orders
                 </a>
                 <a href="{{ route('admin.customers.index') }}" class="admin-nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
-                    👥 Customers
+                    Customers
                 </a>
                 <a href="{{ route('admin.sizes.index') }}" class="admin-nav-item {{ request()->routeIs('admin.sizes.*') ? 'active' : '' }}">
-                    📏 Sizes
+                    Sizes
                 </a>
 
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
 
                 <a href="{{ route('home') }}" class="admin-nav-item" target="_blank">
-                    🌐 View Store Front
+                    View Store Front
                 </a>
                 <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
                     @csrf
                     <button type="submit" class="admin-nav-item" style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
-                        🚪 Logout
+                        Logout
                     </button>
                 </form>
             </nav>
