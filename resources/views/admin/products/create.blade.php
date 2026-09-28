@@ -77,9 +77,15 @@
         </div>
 
         <div class="form-group mb-3">
-            <label class="form-label">Product Image</label>
+            <label class="form-label">Primary Cover Image</label>
             <input type="file" name="image" class="form-control" accept="image/*">
-            <small style="color: #64748b; display: block; margin-top: 4px;">Recommended size: 800x1000px JPG, PNG, or WEBP.</small>
+            <small style="color: #64748b; display: block; margin-top: 4px;">Main image displayed on product cards.</small>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="form-label">Gallery / Design Angle Images (Select Multiple Files)</label>
+            <input type="file" name="images[]" class="form-control" accept="image/*" multiple>
+            <small style="color: #64748b; display: block; margin-top: 4px;">Hold Ctrl / Cmd or select multiple images for customers to swipe/click through designs!</small>
         </div>
 
         <div class="form-group mb-4">

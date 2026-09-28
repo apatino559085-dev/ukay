@@ -6,21 +6,33 @@
 <section class="section">
     <div class="container">
         <div class="product-detail">
+            @php
+                $galleryList = [];
+                if ($product->image) {
+                    $galleryList[] = $product->image;
+                }
+                foreach ($product->images as $gImg) {
+                    $galleryList[] = $gImg->image;
+                }
+                $galleryList = array_values(array_unique($galleryList));
+            @endphp
+
             {{-- Product Gallery --}}
             <div class="product-gallery">
                 <div class="product-main-image" id="mainImage">
-                    <img src="{{ $product->image }}" alt="{{ $product->name }}" id="mainImg">
+                    @if(count($galleryList) > 1)
+                        <button type="button" class="gallery-nav-btn prev" onclick="navigateGallery(-1)" aria-label="Previous Image">&lsaquo;</button>
+                        <button type="button" class="gallery-nav-btn next" onclick="navigateGallery(1)" aria-label="Next Image">&rsaquo;</button>
+                    @endif
+                    <img src="{{ $galleryList[0] ?? '' }}" alt="{{ $product->name }}" id="mainImg">
                 </div>
 
                 {{-- Thumbnails --}}
-                @if($product->images->count() > 0)
+                @if(count($galleryList) > 1)
                     <div class="product-thumbnails">
-                        <div class="product-thumbnail active" onclick="changeImage('{{ asset($product->image) }}', this)">
-                            <img src="{{ asset($product->image) }}" alt="{{ $product->name }}">
-                        </div>
-                        @foreach($product->images as $image)
-                            <div class="product-thumbnail" onclick="changeImage('{{ asset($image->image) }}', this)">
-                                <img src="{{ asset($image->image) }}" alt="{{ $product->name }}">
+                        @foreach($galleryList as $index => $imgUrl)
+                            <div class="product-thumbnail {{ $index === 0 ? 'active' : '' }}" onclick="selectGalleryIndex({{ $index }})" data-index="{{ $index }}">
+                                <img src="{{ $imgUrl }}" alt="{{ $product->name }}">
                             </div>
                         @endforeach
                     </div>
@@ -170,11 +182,49 @@
         input.value = value;
     }
 
-    // Image gallery
-    function changeImage(src, thumbnail) {
-        document.getElementById('mainImg').src = src;
-        document.querySelectorAll('.product-thumbnail').forEach(el => el.classList.remove('active'));
-        thumbnail.classList.add('active');
+    // Image gallery swipe & navigation
+    const galleryImages = @json($galleryList);
+    let currentGalleryIndex = 0;
+
+    function selectGalleryIndex(index) {
+        if (!galleryImages || galleryImages.length === 0) return;
+        currentGalleryIndex = (index + galleryImages.length) % galleryImages.length;
+        const mainImg = document.getElementById('mainImg');
+        if (mainImg) {
+            mainImg.style.opacity = '0.4';
+            setTimeout(() => {
+                mainImg.src = galleryImages[currentGalleryIndex];
+                mainImg.style.opacity = '1';
+            }, 80);
+        }
+        document.querySelectorAll('.product-thumbnail').forEach((el, i) => {
+            el.classList.toggle('active', i === currentGalleryIndex);
+        });
+    }
+
+    function navigateGallery(direction) {
+        selectGalleryIndex(currentGalleryIndex + direction);
+    }
+
+    // Touch Swipe support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const mainImgContainer = document.getElementById('mainImage');
+
+    if (mainImgContainer) {
+        mainImgContainer.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        mainImgContainer.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            const threshold = 40;
+            if (touchEndX < touchStartX - threshold) {
+                navigateGallery(1); // swipe left
+            } else if (touchEndX > touchStartX + threshold) {
+                navigateGallery(-1); // swipe right
+            }
+        }, { passive: true });
     }
 </script>
 @endsection

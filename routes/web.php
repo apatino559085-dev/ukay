@@ -86,6 +86,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Products
+    Route::delete('products/image/{image}', [AdminProductController::class, 'deleteImage'])->name('products.deleteImage');
     Route::resource('products', AdminProductController::class);
 
     // Categories

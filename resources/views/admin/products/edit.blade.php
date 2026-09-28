@@ -80,15 +80,40 @@
             </div>
         </div>
 
-        <div class="form-group mb-3">
-            <label class="form-label">Product Image</label>
+        <div class="form-group mb-4">
+            <label class="form-label">Primary Cover Image</label>
             @if($product->image)
                 <div class="mb-2">
-                    <img src="{{ asset($product->image) }}" alt="Current Image" style="width: 100px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    <img src="{{ $product->image }}" alt="Current Primary Image" style="width: 100px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
                 </div>
             @endif
             <input type="file" name="image" class="form-control" accept="image/*">
-            <small style="color: #64748b; display: block; margin-top: 4px;">Leave blank to keep current image.</small>
+            <small style="color: #64748b; display: block; margin-top: 4px;">Leave blank to keep current cover image.</small>
+        </div>
+
+        {{-- Existing Gallery Images --}}
+        @if($product->images->count() > 0)
+            <div class="form-group mb-4">
+                <label class="form-label">Current Gallery Images ({{ $product->images->count() }})</label>
+                <div class="d-flex gap-2" style="flex-wrap: wrap;">
+                    @foreach($product->images as $galleryImage)
+                        <div style="position: relative; width: 100px; text-align: center; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; background: #ffffff;">
+                            <img src="{{ $galleryImage->image }}" alt="Gallery Image" style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px;">
+                            <form action="{{ route('admin.products.deleteImage', $galleryImage) }}" method="POST" style="margin-top: 6px;" onsubmit="return confirm('Delete this gallery image?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm" style="width: 100%; padding: 2px 6px; font-size: 11px;">Remove</button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        <div class="form-group mb-4">
+            <label class="form-label">Add More Gallery / Design Angle Images (Select Multiple Files)</label>
+            <input type="file" name="images[]" class="form-control" accept="image/*" multiple>
+            <small style="color: #64748b; display: block; margin-top: 4px;">Select multiple files to add more designs/angles for customer swipe gallery!</small>
         </div>
 
         <div class="form-group mb-4">

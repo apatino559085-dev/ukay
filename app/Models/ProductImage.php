@@ -22,4 +22,15 @@ class ProductImage extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Get image URL attribute.
+     */
+    public function getImageAttribute($value)
+    {
+        if ($value && file_exists(public_path($value))) {
+            return asset($value);
+        }
+        return $value;
+    }
 }
