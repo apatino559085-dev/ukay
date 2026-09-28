@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'ThreadLine - Premium Streetwear')
+@section('title', 'THRIFT FINDS - Online Ukay-Ukay Store')
 
 @section('content')
 {{-- ========== HERO SECTION ========== --}}
 <section class="hero-section">
     <div class="hero-content">
-        <p class="hero-subtitle">New Collection</p>
-        <h1 class="hero-title">Explore The<br>Latest Drop</h1>
-        <p class="hero-description">Premium streetwear essentials crafted with quality fabrics and timeless designs for the modern individual.</p>
-        <a href="{{ route('shop') }}" class="btn btn-primary">Shop Now</a>
+        <p class="hero-subtitle">Curated Pre-Loved Apparel</p>
+        <h1 class="hero-title">FIND YOUR NEXT<br>THRIFTED FIT</h1>
+        <p class="hero-description">Unique 1-of-1 pre-loved pieces at affordable prices. Authentic vintage jackets, classic tees, denim, and streetwear finds.</p>
+        <a href="{{ route('shop') }}" class="btn btn-primary">SHOP UKAY FINDS</a>
     </div>
 </section>
 
@@ -17,27 +17,46 @@
 <section class="section">
     <div class="container">
         <div class="section-header">
-            <p class="section-subtitle">Our Collection</p>
-            <h2 class="section-title">Featured Products</h2>
+            <p class="section-subtitle">Freshly Added</p>
+            <h2 class="section-title">NEW THRIFT FINDS</h2>
         </div>
 
         <div class="product-grid">
             @foreach($featuredProducts as $product)
-                <a href="{{ route('product.show', $product) }}" class="product-card">
-                    <div class="product-card-image">
-                        <img src="{{ $product->image }}" alt="{{ $product->name }}">
-                    </div>
+                <div class="product-card" style="position: relative;">
+                    <a href="{{ route('product.show', $product) }}">
+                        <div class="product-card-image">
+                            <img src="{{ $product->image }}" alt="{{ $product->name }}">
+                            @if($product->is_sold)
+                                <div style="position: absolute; top: 12px; right: 12px; background: #ef4444; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 4px; letter-spacing: 1px;">
+                                    SOLD OUT
+                                </div>
+                            @else
+                                <div style="position: absolute; top: 12px; right: 12px; background: #22c55e; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 4px; letter-spacing: 1px;">
+                                    AVAILABLE
+                                </div>
+                            @endif
+                        </div>
+                    </a>
                     <div class="product-card-info">
-                        <h3 class="product-card-name">{{ $product->name }}</h3>
-                        <p class="product-card-price">{{ $product->formatted_price }}</p>
-                        <p class="product-card-category">{{ $product->category->name ?? '' }}</p>
+                        <p style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; margin-bottom: 2px;">
+                            {{ $product->brand ?? $product->category->name ?? 'Ukay Find' }}
+                        </p>
+                        <h3 class="product-card-name">
+                            <a href="{{ route('product.show', $product) }}">{{ $product->name }}</a>
+                        </h3>
+                        <div style="font-size: 12px; color: #555555; margin-bottom: 6px;">
+                            @if($product->size_text) Size: <strong>{{ $product->size_text }}</strong> @endif
+                            @if($product->condition) &bull; {{ $product->condition }} Condition @endif
+                        </div>
+                        <p class="product-card-price" style="font-weight: 700; font-size: 16px;">{{ $product->formatted_price }}</p>
                     </div>
-                </a>
+                </div>
             @endforeach
         </div>
 
         <div class="text-center mt-4">
-            <a href="{{ route('shop') }}" class="btn btn-outline">View All Products</a>
+            <a href="{{ route('shop') }}" class="btn btn-outline">Explore All Thrift Finds →</a>
         </div>
     </div>
 </section>
@@ -46,58 +65,30 @@
 <section class="section" style="background: var(--light);">
     <div class="container">
         <div class="section-header">
-            <p class="section-subtitle">Browse By</p>
-            <h2 class="section-title">Categories</h2>
+            <p class="section-subtitle">Browse By Item</p>
+            <h2 class="section-title">Ukay Categories</h2>
         </div>
 
-        <div class="product-grid" style="grid-template-columns: repeat(3, 1fr);">
-            @foreach($categories->take(6) as $category)
-                <a href="{{ route('shop', ['category' => $category->id]) }}" class="product-card">
-                    <div class="product-card-image" style="aspect-ratio: 4/3;">
-                        <div class="product-placeholder" style="font-size: 24px; flex-direction: column; gap: 12px;">
-                            @switch($category->name)
-                                @case('T-Shirts')
-                                    <i class="fas fa-tshirt"></i>
-                                    @break
-                                @case('Shorts')
-                                    <i class="fas fa-person-running"></i>
-                                    @break
-                                @case('Pants')
-                                    <i class="fas fa-vest-patches"></i>
-                                    @break
-                                @case('Hoodies')
-                                    <i class="fas fa-shirt"></i>
-                                    @break
-                                @case('Hats')
-                                    <i class="fas fa-hat-cowboy"></i>
-                                    @break
-                                @default
-                                    <i class="fas fa-bag-shopping"></i>
-                            @endswitch
-                            <span style="font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">{{ $category->name }}</span>
-                        </div>
-                    </div>
+        <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
+            @foreach($categories as $category)
+                <a href="{{ route('shop', ['category' => $category->id]) }}" class="product-card" style="text-align: center; padding: 24px; background: #ffffff; border-radius: 6px; text-decoration: none;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 4px;">{{ $category->name }}</h3>
+                    <p style="font-size: 12px; color: #666666;">{{ $category->description ?? 'Pre-loved items' }}</p>
                 </a>
             @endforeach
         </div>
     </div>
 </section>
 
-{{-- ========== ABOUT SECTION ========== --}}
-<section class="section about-section">
-    <div class="container">
-        <div class="about-grid">
-            <div class="about-image">
-                <i class="fas fa-scissors"></i>
-            </div>
-            <div class="about-text">
-                <p class="section-subtitle">Our Story</p>
-                <h2>Crafted For The Modern Individual</h2>
-                <p>ThreadLine was born from a passion for quality streetwear that doesn't compromise on comfort or style. Every piece in our collection is thoughtfully designed with premium fabrics and attention to detail.</p>
-                <p>From graphic tees to essential hoodies, we create versatile pieces that seamlessly blend into your everyday wardrobe while making a statement.</p>
-                <a href="{{ route('about') }}" class="btn btn-outline">Learn More</a>
-            </div>
-        </div>
+{{-- ========== BRAND STORY ========== --}}
+<section class="section">
+    <div class="container" style="max-width: 800px; text-align: center;">
+        <p class="section-subtitle">Sustainable Fashion</p>
+        <h2 class="section-title" style="margin-bottom: 20px;">Why Shop Pre-Loved Ukay?</h2>
+        <p style="color: var(--secondary); font-size: 15px; line-height: 1.8; margin-bottom: 24px;">
+            Every piece at <strong>THRIFT FINDS</strong> is a unique, one-of-one item handpicked for quality and style. Giving pre-loved clothing a second life not only saves you money but also reduces environmental waste. Once an item is gone, it's gone for good!
+        </p>
+        <a href="{{ route('about') }}" class="btn btn-outline">Learn About Our Mission</a>
     </div>
 </section>
 @endsection

@@ -28,7 +28,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Process the order.
+     * Process the order for ukay items.
      */
     public function placeOrder(Request $request)
     {
@@ -51,6 +51,15 @@ class CheckoutController extends Controller
         }
 
         $cart->load('items.product');
+
+        // Verify stock for 1-of-1 items
+        foreach ($cart->items as $item) {
+            if ($item->product->is_sold) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Sorry! The ukay item "' . $item->product->name . '" has already been sold. Please remove it from your cart.');
+            }
+        }
+
         $shipping = 100.00;
         $subtotal = $cart->total;
         $total = $subtotal + $shipping;
@@ -72,7 +81,7 @@ class CheckoutController extends Controller
             'postal_code'      => $request->postal_code,
         ]);
 
-        // Create order items from cart items
+        // Create order items from cart items & update item status to SOLD
         foreach ($cart->items as $item) {
             OrderItem::create([
                 'order_id'   => $order->id,
@@ -83,15 +92,21 @@ class CheckoutController extends Controller
                 'subtotal'   => $item->price * $item->quantity,
             ]);
 
-            // Decrease product stock
+            // Mark ukay item as SOLD and set stock to 0
             $item->product->decrement('stock', $item->quantity);
+            if ($item->product->fresh()->stock <= 0) {
+                $item->product->update([
+                    'stock'  => 0,
+                    'status' => 'sold',
+                ]);
+            }
         }
 
         // Clear the cart
         $cart->items()->delete();
 
         return redirect()->route('order.success', $order->id)
-            ->with('success', 'Order placed successfully!');
+            ->with('success', 'Order placed successfully! Your ukay item is reserved.');
     }
 
     /**
@@ -99,7 +114,6 @@ class CheckoutController extends Controller
      */
     public function success(Order $order)
     {
-        // Make sure the order belongs to the current user
         if ($order->user_id !== auth()->id()) {
             abort(403);
         }

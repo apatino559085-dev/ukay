@@ -21,7 +21,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Show the form to create a new product.
+     * Show the form to create a new ukay product.
      */
     public function create()
     {
@@ -31,27 +31,35 @@ class ProductController extends Controller
     }
 
     /**
-     * Store a new product.
+     * Store a new ukay product.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'material'    => 'nullable|string|max:255',
-            'stock'       => 'required|integer|min:0',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'images.*'    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'featured'    => 'nullable|boolean',
-            'sizes'       => 'nullable|array',
-            'sizes.*'     => 'exists:sizes,id',
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'price'        => 'required|numeric|min:0',
+            'category_id'  => 'required|exists:categories,id',
+            'size_text'    => 'required|string|max:255',
+            'condition'    => 'required|string|max:255',
+            'color'        => 'nullable|string|max:255',
+            'material'     => 'nullable|string|max:255',
+            'measurements' => 'nullable|string|max:255',
+            'description'  => 'nullable|string',
+            'stock'        => 'required|integer|min:0',
+            'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'featured'     => 'nullable|boolean',
         ]);
 
-        $data = $request->only(['name', 'price', 'category_id', 'material', 'stock']);
+        $data = $request->only([
+            'name', 'brand', 'size_text', 'color', 'condition', 'measurements',
+            'description', 'price', 'category_id', 'material', 'stock'
+        ]);
         $data['featured'] = $request->has('featured');
+        $data['status']   = ($request->stock <= 0) ? 'sold' : 'available';
 
-        // Handle single primary image
+        // Handle single primary cover image
         if ($request->hasFile('image')) {
             $imageName = time() . '_' . rand(100, 999) . '_' . $request->file('image')->getClientOriginalName();
             $request->file('image')->move(public_path('images/products'), $imageName);
@@ -69,7 +77,6 @@ class ProductController extends Controller
                 $file->move(public_path('images/products'), $imageName);
                 $path = 'images/products/' . $imageName;
 
-                // Set primary image if not set yet
                 if (!$product->image && $sortOrder === 1) {
                     $product->update(['image' => $path]);
                 }
@@ -81,15 +88,8 @@ class ProductController extends Controller
             }
         }
 
-        // Attach sizes
-        if ($request->has('sizes')) {
-            foreach ($request->sizes as $sizeId) {
-                $product->sizes()->attach($sizeId, ['stock' => $request->stock]);
-            }
-        }
-
         return redirect()->route('admin.products.index')
-            ->with('success', 'Product created successfully!');
+            ->with('success', 'Ukay item created successfully!');
     }
 
     /**
@@ -109,25 +109,34 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'material'    => 'nullable|string|max:255',
-            'stock'       => 'required|integer|min:0',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'images.*'    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
-            'featured'    => 'nullable|boolean',
-            'sizes'       => 'nullable|array',
-            'sizes.*'     => 'exists:sizes,id',
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'price'        => 'required|numeric|min:0',
+            'category_id'  => 'required|exists:categories,id',
+            'size_text'    => 'required|string|max:255',
+            'condition'    => 'required|string|max:255',
+            'color'        => 'nullable|string|max:255',
+            'material'     => 'nullable|string|max:255',
+            'measurements' => 'nullable|string|max:255',
+            'description'  => 'nullable|string',
+            'stock'        => 'required|integer|min:0',
+            'image'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+            'featured'     => 'nullable|boolean',
         ]);
 
-        $data = $request->only(['name', 'price', 'category_id', 'material', 'stock']);
+        $data = $request->only([
+            'name', 'brand', 'size_text', 'color', 'condition', 'measurements',
+            'description', 'price', 'category_id', 'material', 'stock'
+        ]);
         $data['featured'] = $request->has('featured');
+        $data['status']   = ($request->stock <= 0) ? 'sold' : 'available';
 
-        // Handle main primary image update
+        // Handle main primary cover image update
         if ($request->hasFile('image')) {
-            if ($product->image && file_exists(public_path($product->image))) {
-                @unlink(public_path($product->image));
+            $rawPath = $product->getRawOriginal('image');
+            if ($rawPath && file_exists(public_path($rawPath))) {
+                @unlink(public_path($rawPath));
             }
 
             $imageName = time() . '_' . rand(100, 999) . '_' . $request->file('image')->getClientOriginalName();
@@ -137,7 +146,7 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Handle additional multiple gallery images upload
+        // Handle additional gallery images upload
         if ($request->hasFile('images')) {
             $currentMaxSort = $product->images()->max('sort_order') ?? 0;
             foreach ($request->file('images') as $file) {
@@ -153,19 +162,8 @@ class ProductController extends Controller
             }
         }
 
-        // Sync sizes
-        if ($request->has('sizes')) {
-            $syncData = [];
-            foreach ($request->sizes as $sizeId) {
-                $syncData[$sizeId] = ['stock' => $request->stock];
-            }
-            $product->sizes()->sync($syncData);
-        } else {
-            $product->sizes()->detach();
-        }
-
         return redirect()->route('admin.products.index')
-            ->with('success', 'Product updated successfully!');
+            ->with('success', 'Ukay item updated successfully!');
     }
 
     /**
@@ -188,20 +186,21 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        if ($product->image && file_exists(public_path($product->image))) {
-            @unlink(public_path($product->image));
+        $rawPath = $product->getRawOriginal('image');
+        if ($rawPath && file_exists(public_path($rawPath))) {
+            @unlink(public_path($rawPath));
         }
 
         foreach ($product->images as $galleryImg) {
-            $rawPath = $galleryImg->getRawOriginal('image');
-            if ($rawPath && file_exists(public_path($rawPath))) {
-                @unlink(public_path($rawPath));
+            $galleryPath = $galleryImg->getRawOriginal('image');
+            if ($galleryPath && file_exists(public_path($galleryPath))) {
+                @unlink(public_path($galleryPath));
             }
         }
 
         $product->delete();
 
         return redirect()->route('admin.products.index')
-            ->with('success', 'Product deleted successfully!');
+            ->with('success', 'Ukay item deleted successfully!');
     }
 }

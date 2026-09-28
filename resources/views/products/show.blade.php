@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' - ThreadLine')
+@section('title', $product->name . ' - THRIFT FINDS')
 
 @section('content')
 <section class="section">
@@ -39,122 +39,99 @@
                 @endif
             </div>
 
-            {{-- Product Info --}}
+            {{-- Thrift Item Details --}}
             <div class="product-info">
-                <p class="product-card-category" style="margin-bottom: 8px;">{{ $product->category->name ?? '' }}</p>
-                <h1 class="product-name">{{ $product->name }}</h1>
-                <p class="product-price">{{ $product->formatted_price }}</p>
+                <div class="d-flex justify-between align-center mb-2">
+                    <span style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 1px;">
+                        {{ $product->category->name ?? 'Ukay Find' }}
+                    </span>
+                    @if($product->is_sold)
+                        <span style="background: #ef4444; color: #ffffff; padding: 4px 12px; font-size: 12px; font-weight: 700; border-radius: 4px; letter-spacing: 1px;">
+                            SOLD OUT
+                        </span>
+                    @else
+                        <span style="background: #22c55e; color: #ffffff; padding: 4px 12px; font-size: 12px; font-weight: 700; border-radius: 4px; letter-spacing: 1px;">
+                            AVAILABLE (1 OF 1)
+                        </span>
+                    @endif
+                </div>
 
-                <p class="product-description">{{ $product->description }}</p>
-
-                @if($product->material)
-                    <p class="product-material">
-                        <strong>Material:</strong> {{ $product->material }}
-                    </p>
-                @endif
-
-                <p style="font-size: 13px; color: var(--secondary); margin-bottom: 20px;">
-                    <strong>Stock:</strong> {{ $product->stock > 0 ? $product->stock . ' available' : 'Out of stock' }}
+                <h1 class="product-name" style="margin-bottom: 8px;">{{ $product->name }}</h1>
+                <p class="product-price" style="font-size: 26px; font-weight: 700; color: #111111; margin-bottom: 20px;">
+                    {{ $product->formatted_price }}
                 </p>
 
-                @auth
+                {{-- Key Thrift Attributes Grid --}}
+                <div style="background: #f8fafc; padding: 18px 20px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+                    <div><strong>Brand:</strong> {{ $product->brand ?? 'Unbranded / Vintage' }}</div>
+                    <div><strong>Size:</strong> {{ $product->size_text ?? 'Free Size' }}</div>
+                    <div><strong>Condition:</strong> {{ $product->condition ?? 'Good' }}</div>
+                    <div><strong>Color:</strong> {{ $product->color ?? 'As Pictured' }}</div>
+                </div>
+
+                {{-- Measurements --}}
+                @if($product->measurements)
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: #334155;">
+                            Measurements:
+                        </h4>
+                        <p style="font-size: 14px; color: #475569; background: #ffffff; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                            {{ $product->measurements }}
+                        </p>
+                    </div>
+                @endif
+
+                {{-- Description --}}
+                @if($product->description)
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: #334155;">
+                            Item Description:
+                        </h4>
+                        <p class="product-description" style="color: #475569; font-size: 14px; line-height: 1.7;">
+                            {{ $product->description }}
+                        </p>
+                    </div>
+                @endif
+
+                {{-- Add to Cart Form --}}
+                @if(!$product->is_sold)
                     <form method="POST" action="{{ route('cart.add') }}">
                         @csrf
-
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="size" value="{{ $product->size_text ?? 'Standard' }}">
 
-                        {{-- Size Selection --}}
-                        @if($product->sizes->count() > 0)
-                            <div class="size-selector">
-                                <p class="size-label">Select Size</p>
-                                <div class="size-options">
-                                    @foreach($product->sizes as $index => $size)
-                                        <label class="size-option {{ $index === 0 ? 'selected' : '' }}"
-                                               onclick="selectSize(this)">
-                                            <input type="radio" name="size" value="{{ $size->name }}"
-                                                   {{ $index === 0 ? 'checked' : '' }}>
-                                            {{ $size->name }}
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @else
-                            <input type="hidden" name="size" value="One Size">
-                        @endif
-
-                        {{-- Quantity --}}
-                        <div class="quantity-selector">
-                            <p class="quantity-label">Quantity</p>
-                            <div class="quantity-control">
-                                <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">−</button>
-                                <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock }}"
-                                       class="quantity-input" id="quantityInput" readonly>
-                                <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
-                            </div>
-                        </div>
-
-                        {{-- Add to Cart --}}
-                        <button type="submit" class="btn btn-primary add-to-cart-btn"
-                                {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                            {{ $product->stock > 0 ? 'Add to Cart' : 'Out of Stock' }}
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 700; letter-spacing: 1px;">
+                            ADD TO CART &bull; {{ $product->formatted_price }}
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-primary add-to-cart-btn">Login to Purchase</a>
-                @endauth
-
-                {{-- Size Chart --}}
-                @if($product->sizes->count() > 0)
-                    <div class="mt-4" style="border-top: 1px solid var(--border); padding-top: 24px;">
-                        <h3 style="font-size: 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;">Size Chart</h3>
-                        <table class="size-chart-table">
-                            <thead>
-                                <tr>
-                                    <th>Size</th>
-                                    <th>Width</th>
-                                    <th>Length</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($product->sizes as $size)
-                                    <tr>
-                                        <td><strong>{{ $size->name }}</strong></td>
-                                        <td>{{ $size->width ?? '-' }}</td>
-                                        <td>{{ $size->length ?? '-' }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <button type="button" class="btn" style="width: 100%; padding: 16px; font-size: 15px; font-weight: 700; background: #cbd5e1; color: #64748b; cursor: not-allowed;" disabled>
+                        ITEM IS SOLD OUT
+                    </button>
                 @endif
             </div>
         </div>
 
-        {{-- Related Products --}}
+        {{-- Related Thrift Items --}}
         @if($relatedProducts->count() > 0)
-            <div class="mt-4" style="border-top: 1px solid var(--border); padding-top: 60px;">
-                <div class="section-header">
-                    <p class="section-subtitle">You may also like</p>
-                    <h2 class="section-title">Related Products</h2>
-                </div>
-                <div class="product-grid">
-                    @foreach($relatedProducts as $related)
-                        <a href="{{ route('product.show', $related) }}" class="product-card">
-                            <div class="product-card-image">
-                                @if($related->image)
-                                    <img src="{{ asset($related->image) }}" alt="{{ $related->name }}">
-                                @else
-                                    <div class="product-placeholder">
-                                        <i class="fas fa-tshirt"></i>
-                                    </div>
-                                @endif
-                            </div>
+            <div style="margin-top: 60px;">
+                <h3 style="font-family: var(--font-heading); font-size: 22px; margin-bottom: 24px;">More Thrift Finds</h3>
+                <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    @foreach($relatedProducts as $relProduct)
+                        <div class="product-card">
+                            <a href="{{ route('product.show', $relProduct) }}">
+                                <div class="product-card-image">
+                                    <img src="{{ $relProduct->image }}" alt="{{ $relProduct->name }}">
+                                </div>
+                            </a>
                             <div class="product-card-info">
-                                <h3 class="product-card-name">{{ $related->name }}</h3>
-                                <p class="product-card-price">{{ $related->formatted_price }}</p>
-                                <p class="product-card-category">{{ $related->category->name ?? '' }}</p>
+                                <h3 class="product-card-name">
+                                    <a href="{{ route('product.show', $relProduct) }}">{{ $relProduct->name }}</a>
+                                </h3>
+                                <p class="product-card-price">{{ $relProduct->formatted_price }}</p>
                             </div>
-                        </a>
+                        </div>
                     @endforeach
                 </div>
             </div>
@@ -165,23 +142,6 @@
 
 @section('scripts')
 <script>
-    // Size selection
-    function selectSize(element) {
-        document.querySelectorAll('.size-option').forEach(el => el.classList.remove('selected'));
-        element.classList.add('selected');
-        element.querySelector('input').checked = true;
-    }
-
-    // Quantity control
-    function changeQuantity(delta) {
-        const input = document.getElementById('quantityInput');
-        let value = parseInt(input.value) + delta;
-        const max = parseInt(input.max);
-        if (value < 1) value = 1;
-        if (value > max) value = max;
-        input.value = value;
-    }
-
     // Image gallery swipe & navigation
     const galleryImages = @json($galleryList);
     let currentGalleryIndex = 0;

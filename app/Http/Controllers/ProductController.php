@@ -9,18 +9,20 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
-     * Display the shop page with all products.
+     * Display the shop / ukay finds page with products, search, and filters.
      */
     public function index(Request $request)
     {
         $query = Product::with('category');
 
-        // Search filter
+        // Search filter (Item Name, Brand, Description, Category)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('size_text', 'like', "%{$search}%")
                   ->orWhereHas('category', function ($q2) use ($search) {
                       $q2->where('name', 'like', "%{$search}%");
                   });
@@ -30,6 +32,22 @@ class ProductController extends Controller
         // Category filter
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
+        }
+
+        // Condition filter
+        if ($request->filled('condition')) {
+            $query->where('condition', $request->condition);
+        }
+
+        // Availability filter (e.g. available vs sold)
+        if ($request->filled('availability')) {
+            if ($request->availability === 'available') {
+                $query->where('stock', '>', 0)->where('status', '!=', 'sold');
+            } elseif ($request->availability === 'sold') {
+                $query->where(function($q) {
+                    $q->where('stock', '<=', 0)->orWhere('status', 'sold');
+                });
+            }
         }
 
         // Sort
@@ -44,7 +62,9 @@ class ProductController extends Controller
                 $query->orderBy('name', 'asc');
                 break;
             default:
-                $query->latest();
+                // Show available items first, then latest
+                $query->orderByRaw("CASE WHEN stock > 0 AND status != 'sold' THEN 0 ELSE 1 END")
+                      ->latest();
                 break;
         }
 
@@ -55,14 +75,14 @@ class ProductController extends Controller
     }
 
     /**
-     * Display a single product's details.
+     * Display a single thrift item's details.
      */
     public function show(Product $product)
     {
         // Load relationships
         $product->load(['category', 'images', 'sizes']);
 
-        // Get related products from the same category
+        // Get related thrift items from the same category
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->take(4)

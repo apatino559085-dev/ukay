@@ -22,41 +22,47 @@ class CartController extends Controller
     }
 
     /**
-     * Add a product to the cart.
+     * Add an ukay product to the cart.
      */
     public function add(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'size'       => 'required|string',
-            'quantity'   => 'required|integer|min:1',
+            'size'       => 'nullable|string',
+            'quantity'   => 'nullable|integer|min:1',
         ]);
 
         $product = Product::findOrFail($request->product_id);
-        $cart = $this->getOrCreateCart();
 
-        // Check if product with same size already in cart
+        // Check if item is sold out
+        if ($product->is_sold) {
+            return redirect()->back()->with('error', 'Sorry! This unique ukay item is already SOLD OUT.');
+        }
+
+        $cart = $this->getOrCreateCart();
+        $requestedQty = $request->quantity ?? 1;
+        $size = $request->size ?? $product->size_text ?? 'Standard';
+
+        // Check if product is already in cart
         $cartItem = $cart->items()
             ->where('product_id', $product->id)
-            ->where('size', $request->size)
             ->first();
 
         if ($cartItem) {
-            // Update quantity if already in cart
-            $cartItem->update([
-                'quantity' => $cartItem->quantity + $request->quantity,
-            ]);
+            // Since ukay items are unique (stock = 1), cap quantity at max available stock
+            $newQty = min($product->stock, $cartItem->quantity + $requestedQty);
+            $cartItem->update(['quantity' => $newQty]);
         } else {
             // Add new item to cart
             $cart->items()->create([
                 'product_id' => $product->id,
-                'size'       => $request->size,
-                'quantity'   => $request->quantity,
+                'size'       => $size,
+                'quantity'   => min($product->stock, $requestedQty),
                 'price'      => $product->price,
             ]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Product added to cart!');
+        return redirect()->route('cart.index')->with('success', 'Thrift item added to your bag!');
     }
 
     /**
@@ -68,13 +74,15 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        // Make sure the cart item belongs to the current user
         if ($cartItem->cart->user_id !== auth()->id()) {
             abort(403);
         }
 
+        $product = $cartItem->product;
+        $newQty = min($product->stock, $request->quantity);
+
         $cartItem->update([
-            'quantity' => $request->quantity,
+            'quantity' => $newQty,
         ]);
 
         return redirect()->route('cart.index')->with('success', 'Cart updated!');
@@ -85,14 +93,13 @@ class CartController extends Controller
      */
     public function remove(CartItem $cartItem)
     {
-        // Make sure the cart item belongs to the current user
         if ($cartItem->cart->user_id !== auth()->id()) {
             abort(403);
         }
 
         $cartItem->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
+        return redirect()->route('cart.index')->with('success', 'Item removed from your cart.');
     }
 
     /**
@@ -100,7 +107,6 @@ class CartController extends Controller
      */
     private function getOrCreateCart()
     {
-        $cart = Cart::firstOrCreate(['user_id' => auth()->id()]);
-        return $cart;
+        return Cart::firstOrCreate(['user_id' => auth()->id()]);
     }
 }

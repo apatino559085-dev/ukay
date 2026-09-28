@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Shopping Cart - ThreadLine')
+@section('title', 'Your Thrift Bag - THRIFT FINDS')
 
 @section('content')
 <div class="page-header">
-    <h1>Shopping Cart</h1>
+    <h1>Your Thrift Bag</h1>
+    <p>Review your selected 1-of-1 pre-loved items before checkout</p>
 </div>
 
 <section class="section">
@@ -13,10 +14,10 @@
             <table class="cart-table">
                 <thead>
                     <tr>
-                        <th>Product</th>
+                        <th>Ukay Item</th>
                         <th>Size</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Qty</th>
                         <th>Subtotal</th>
                         <th></th>
                     </tr>
@@ -30,25 +31,24 @@
                                         <img src="{{ $item->product->image }}" alt="{{ $item->product->name }}">
                                     </div>
                                     <div>
-                                        <p class="cart-item-name">{{ $item->product->name }}</p>
+                                        <p style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: #64748b; margin-bottom: 2px;">
+                                            {{ $item->product->brand ?? 'Ukay Find' }}
+                                        </p>
+                                        <p class="cart-item-name">
+                                            <a href="{{ route('product.show', $item->product) }}">{{ $item->product->name }}</a>
+                                        </p>
+                                        @if($item->product->is_sold)
+                                            <span style="color: #ef4444; font-size: 11px; font-weight: 700;">SOLD OUT - Remove from cart</span>
+                                        @else
+                                            <span style="color: #22c55e; font-size: 11px; font-weight: 600;">1 of 1 Unique Item</span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ $item->size }}</td>
+                            <td><strong>{{ $item->size }}</strong></td>
                             <td>₱{{ number_format($item->price, 2) }}</td>
                             <td>
-                                <form method="POST" action="{{ route('cart.update', $item) }}" style="display: flex; align-items: center;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <div class="quantity-control" style="transform: scale(0.85);">
-                                        <button type="button" class="quantity-btn"
-                                                onclick="this.parentElement.querySelector('input').value = Math.max(1, parseInt(this.parentElement.querySelector('input').value) - 1); this.closest('form').submit();">−</button>
-                                        <input type="number" name="quantity" value="{{ $item->quantity }}" min="1"
-                                               class="quantity-input" readonly>
-                                        <button type="button" class="quantity-btn"
-                                                onclick="this.parentElement.querySelector('input').value = parseInt(this.parentElement.querySelector('input').value) + 1; this.closest('form').submit();">+</button>
-                                    </div>
-                                </form>
+                                <span style="font-weight: 600; font-size: 14px;">{{ $item->quantity }}</span>
                             </td>
                             <td><strong>₱{{ number_format($item->subtotal, 2) }}</strong></td>
                             <td>
@@ -66,30 +66,30 @@
             {{-- Cart Summary --}}
             <div class="cart-summary">
                 <div class="cart-summary-row">
-                    <span>Subtotal</span>
+                    <span>Items Subtotal</span>
                     <span>₱{{ number_format($cart->total, 2) }}</span>
                 </div>
                 <div class="cart-summary-row">
-                    <span>Shipping</span>
+                    <span>Shipping Fee</span>
                     <span>₱{{ number_format($shipping, 2) }}</span>
                 </div>
                 <div class="cart-summary-row total">
-                    <span>Total</span>
+                    <span>Total Amount</span>
                     <span>₱{{ number_format($cart->total + $shipping, 2) }}</span>
                 </div>
                 <a href="{{ route('checkout.index') }}" class="btn btn-primary mt-3" style="width: 100%;">
-                    Proceed to Checkout
+                    Proceed to Checkout →
                 </a>
                 <a href="{{ route('shop') }}" class="btn btn-outline mt-2" style="width: 100%;">
-                    Continue Shopping
+                    Continue Shopping Ukay Finds
                 </a>
             </div>
         @else
             <div class="empty-state">
                 <div class="empty-state-icon"><i class="fas fa-shopping-bag"></i></div>
-                <h3>Your cart is empty</h3>
-                <p>Looks like you haven't added any items yet.</p>
-                <a href="{{ route('shop') }}" class="btn btn-primary">Start Shopping</a>
+                <h3>Your Thrift Bag is Empty</h3>
+                <p>Looks like you haven't added any pre-loved items to your bag yet.</p>
+                <a href="{{ route('shop') }}" class="btn btn-primary">Browse Thrift Finds</a>
             </div>
         @endif
     </div>

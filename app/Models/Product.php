@@ -12,12 +12,18 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'brand',
+        'size_text',
+        'color',
+        'condition',
+        'measurements',
         'description',
         'price',
         'material',
         'stock',
         'image',
         'featured',
+        'status',
     ];
 
     /**
@@ -55,11 +61,19 @@ class Product extends Model
     }
 
     /**
-     * Get the formatted price with peso sign or dollar sign.
+     * Check if product is sold out.
+     */
+    public function getIsSoldAttribute()
+    {
+        return $this->stock <= 0 || $this->status === 'sold';
+    }
+
+    /**
+     * Get the formatted price with PHP peso sign.
      */
     public function getFormattedPriceAttribute()
     {
-        return '$' . number_format($this->price, 2);
+        return '₱' . number_format($this->price, 2);
     }
 
     /**
@@ -71,8 +85,7 @@ class Product extends Model
             return asset($value);
         }
 
-        $title = rawurlencode($this->name ?? 'ThreadLine');
-        return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><rect width="100%" height="100%" fill="%23f3f4f6"/><rect x="40" y="40" width="520" height="720" fill="none" stroke="%23e5e7eb" stroke-width="2"/><circle cx="300" cy="350" r="100" fill="%23e5e7eb"/><path d="M 230 450 Q 300 390 370 450" fill="none" stroke="%239ca3af" stroke-width="6"/><text x="50%" y="580" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="bold" fill="%23111827" text-anchor="middle">' . $title . '</text><text x="50%" y="620" font-family="Helvetica, Arial, sans-serif" font-size="14" letter-spacing="2" fill="%236b7280" text-anchor="middle">THREADLINE STREETWEAR</text></svg>';
+        $title = rawurlencode($this->name ?? 'Thrift Find');
+        return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><rect width="100%" height="100%" fill="%23f3f4f6"/><rect x="40" y="40" width="520" height="720" fill="none" stroke="%23e5e7eb" stroke-width="2"/><circle cx="300" cy="350" r="100" fill="%23e5e7eb"/><path d="M 230 450 Q 300 390 370 450" fill="none" stroke="%239ca3af" stroke-width="6"/><text x="50%" y="580" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="bold" fill="%23111827" text-anchor="middle">' . $title . '</text><text x="50%" y="620" font-family="Helvetica, Arial, sans-serif" font-size="14" letter-spacing="2" fill="%236b7280" text-anchor="middle">THRIFT FINDS UKAY</text></svg>';
     }
 }
-
